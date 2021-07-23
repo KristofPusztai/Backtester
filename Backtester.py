@@ -23,8 +23,26 @@ class Backtester:
         self.data = data
         self.start_balance = start_balance
         self.price_data = price_data
+        self.model_fn = None
 
-    def run(self, model, plot=True, info=False, delta=False):
+    def set_model(self, model):
+        """
+
+        :param model: Model used to generate portfolio positions, should take in current date, and data as parameters
+        :type model: function
+        """
+        self.model_fn = model
+
+    def __model_step(self, date):
+        """
+
+        :param date: Current column date value
+        :type date: string
+        :return: returns output of model
+        :rtype: dictionary
+        """
+
+    def run(self, plot=True, info=False, delta=False):
         """
 
         :param delta: If True, model should output dictionary of change in portfolio positions, otherwise should output
@@ -32,8 +50,6 @@ class Backtester:
         :type delta: bool
         :param info: True, prints summary of run, False, remains quiet
         :type info: bool
-        :param model: Model used to generate portfolio positions
-        :type model: type
         :param plot: True to plot, False to not plot
         :type plot: bool
         :return: Returns end_balance and model outputs in list
