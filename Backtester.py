@@ -18,8 +18,9 @@ class Backtester:
         :param start_balance: Starting balance amount
         :type start_balance: float
         :param start_portfolio: starting portfolio, should include all assets that model considers trade options on,
-        dictionary reflects percentage, sum of all assets in portfolio is 1
-        note: if start_portfolio is not empty, consider balance fully invested at start (no cash buying power)
+        dictionary reflects percentage, sum of all assets in portfolio is 1 with keys being asset symbols
+        (should correspond to price_data rows)
+        note: if values in start_portfolio are not all 0, consider balance fully invested at start, i.e no cash B.P.
         :type start_portfolio: dictionary
         :param price_data: Data for running model purchases/sells and calculating final portfolio value, should have
         same number of columns as data DataFrame, with rows containing asset symbol
@@ -50,17 +51,26 @@ class Backtester:
         :return: nothing
         :rtype: None
         """
-        # TODO: Complete
+        self.value = self.__calculate_value(date)
+        data = self.data.loc[:, :date]
+        self.portfolio = self.model_fn(data)
+        # TODO: step_output is true
 
-    def __calculate_balance(self, date):
+    def __calculate_value(self, date):
         """
 
         :param date: Current column date value
         :type date: string
-        :return: current balance
+        :return: current value
         :rtype: float
         """
-        # TODO: Complete
+        value = 0
+        for symbol, position in self.portfolio.iteritems():
+            num = position * self.value
+            price = self.data[date][symbol]
+            val = price * num
+            value += val
+        return value
 
     def run(self, plot=True, info=True, step_output=False):
         """
@@ -99,7 +109,7 @@ class Backtester:
                 plt.xlabel('Date')
                 plt.ylabel('Portfolio Value ($)')
             if info:
-                roi = 100.0 * (self.value - self.start_val)/self.start_val
+                roi = 100.0 * (self.value - self.start_val) / self.start_val
                 print("ROI: " + str(roi) + "%")
                 print("Final Value: " + str(self.value))
                 print("Final Portfolio: " + str(self.portfolio))
