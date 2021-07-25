@@ -1,13 +1,19 @@
+import matplotlib.pyplot as plt
+
+
 class Backtester:
     """
     Class for backtesting various strategies and portfolio's, assumes all start balance will be invested (0 sum)
 
     note: Make sure data is compatible with model
     """
+
     def __init__(self, data, start_balance, start_portfolio, price_data):
         """
 
         :param data: Data for use in model run, make sure columns reflect time (important for plotting)
+        Note: columns should not be string but datetime objects:
+        https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/
         :type data: pandas.DataFrame
         :param start_balance: Starting balance amount
         :type start_balance: float
@@ -19,9 +25,11 @@ class Backtester:
         same number of columns as data DataFrame, with rows containing asset symbol
         :type price_data: pandas.DataFrame
         """
+        self.start_val = start_balance  # For use if roi info is wanted during run
+
         self.portfolio = start_portfolio
         self.data = data
-        self.start_balance = start_balance
+        self.value = start_balance
         self.price_data = price_data
         self.model_fn = None
 
@@ -33,26 +41,69 @@ class Backtester:
         """
         self.model_fn = model
 
-    def __model_step(self, date):
+    def __model_step(self, date, step_output):
+        """
+        Takes a trading "step" according to model for specified data point(s), updates portfolio and value
+
+        :param date: Current column date value
+        :type date: string
+        :return: nothing
+        :rtype: None
+        """
+        # TODO: Complete
+
+    def __calculate_balance(self, date):
         """
 
         :param date: Current column date value
         :type date: string
-        :return: returns output of model
-        :rtype: dictionary
+        :return: current balance
+        :rtype: float
+        """
+        # TODO: Complete
+
+    def run(self, plot=True, info=True, step_output=False):
         """
 
-    def run(self, plot=True, info=False, delta=False):
-        """
-
-        :param delta: If True, model should output dictionary of change in portfolio positions, otherwise should output
-        new portfolio positions summing to 1
-        :type delta: bool
-        :param info: True, prints summary of run, False, remains quiet
+        :param step_output: True, prints each step output and portfolio value, False, remains quiet
+        :type step_output: bool
+        :param info: True, prints summary of run including biggest loss, percentage gain, final value, final portfolio,
+        False, remains quiet and only returns end_balance
         :type info: bool
         :param plot: True to plot, False to not plot
         :type plot: bool
-        :return: Returns end_balance and model outputs in list
+        :return: Returns history of portfolio value
         :rtype: list
         """
+        if self.model_fn:
+            history = []
+            if info:
+                biggest_loss = 0.0
+            if plot:
+                time = []
 
+            for i in self.data:
+                if info:
+                    prev_val = self.value
+                self.__model_step(i, step_output)
+                history.append(self.value)
+                if plot:
+                    time.append(i)
+                if info:
+                    diff = self.value - prev_val
+                    if diff < biggest_loss:
+                        biggest_loss = diff
+
+            if plot:
+                plt.plot(time, history)
+                plt.xlabel('Date')
+                plt.ylabel('Portfolio Value ($)')
+            if info:
+                roi = 100.0 * (self.value - self.start_val)/self.start_val
+                print("ROI: " + str(roi) + "%")
+                print("Final Value: " + str(self.value))
+                print("Final Portfolio: " + str(self.portfolio))
+                print("Biggest Loss: " + str(biggest_loss))
+            return history
+        else:
+            print("Model Function cannot be None, please set via set_model")
