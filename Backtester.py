@@ -54,7 +54,9 @@ class Backtester:
         self.value = self.__calculate_value(date)
         data = self.data.loc[:, :date]
         self.portfolio = self.model_fn(data)
-        # TODO: step_output is true
+        if step_output:
+            print("Value at Step: " + str(self.value))
+            print("Portfolio: " + str(self.portfolio))
 
     def __calculate_value(self, date):
         """
