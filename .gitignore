@@ -2,7 +2,5 @@
 git
 __pycache__
 .DS_Store
-setup
-testpip_upload
-/pip_upload
 .ipynb_checkpoints
+*.ipynb
