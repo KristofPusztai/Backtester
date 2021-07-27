@@ -28,6 +28,7 @@ class Backtester:
 
         self.portfolio = start_portfolio
         checksum = sum(self.portfolio.values())
+        # Invalid input check
         if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
                 not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
             raise ValueError('Invalid Input Portfolio, output sum: ' + str(checksum))
@@ -60,10 +61,10 @@ class Backtester:
         out = self.model_fn(data, step_output)
         if out:
             checksum = sum(out.values())
+            # Invalid output check
             if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
                     not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
                 raise ValueError('Invalid Model Portfolio output sum: ' + str(checksum))
-            # Sum of output portfolio percentages must be 1 or 0
             self.portfolio = out
             if step_output:
                 print("Value: " + str(self.value))
