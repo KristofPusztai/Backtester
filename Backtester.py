@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import math
 
 
 class Backtester:
@@ -8,22 +9,19 @@ class Backtester:
     note: Make sure data is compatible with model
     """
 
-    def __init__(self, data, start_balance, start_portfolio, price_data):
+    def __init__(self, data, start_balance, price_data, start_portfolio):
         """
 
+        :param start_portfolio: Format: {'ticker/asset id': % of portfolio (total of these should sum to 1), ...}
+        :type start_portfolio: dictionary
         :param data: Data for use in model run, make sure columns reflect time (important for plotting)
         Note: columns should not be string but datetime objects:
         https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/
         :type data: pandas.DataFrame
         :param start_balance: Starting balance amount
         :type start_balance: float
-        :param start_portfolio: starting portfolio, should include all assets that model considers trade options on,
-        dictionary reflects percentage, sum of all assets in portfolio is 1 with keys being asset symbols
-        (should correspond to price_data rows)
-        note: if values in start_portfolio are not all 0, consider balance fully invested at start, i.e no cash B.P.
-        :type start_portfolio: dictionary
         :param price_data: Data for running model purchases/sells and calculating final portfolio value, should have
-        same number of columns as data DataFrame, with rows containing asset symbol
+        same number of columns as data DataFrame, with columns containing asset symbol
         :type price_data: pandas.DataFrame
         """
         self.start_val = start_balance  # For use if roi info is wanted during run
@@ -37,7 +35,8 @@ class Backtester:
     def set_model(self, model):
         """
 
-        :param model: Model used to generate portfolio positions, should take in current date, and data as parameters
+        :param model: Model used to generate portfolio positions, should take in current data and step_output boolean
+        as parameters
         :type model: function
         """
         self.model_fn = model
@@ -51,12 +50,18 @@ class Backtester:
         :return: nothing
         :rtype: None
         """
-        self.value = self.__calculate_value(date)
-        data = self.data.loc[:, :date]
-        self.portfolio = self.model_fn(data)
-        if step_output:
-            print("Value at Step: " + str(self.value))
-            print("Portfolio: " + str(self.portfolio))
+        if sum(self.portfolio.values()) == 1:
+            self.value = self.__calculate_value(date)
+        data = self.data.loc[:date]
+        out = self.model_fn(data, step_output)
+        if out:
+            checksum = sum(out.values())
+            if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
+                    not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
+                raise ValueError('Invalid Model Portfolio output sum: ' + str(checksum))
+            self.portfolio = out
+            if step_output:
+                print("Value: " + str(self.value))
 
     def __calculate_value(self, date):
         """
@@ -67,16 +72,20 @@ class Backtester:
         :rtype: float
         """
         value = 0
-        for symbol, position in self.portfolio.iteritems():
+        for symbol in self.portfolio:
+            position = self.portfolio[symbol]
             num = position * self.value
-            price = self.data[date][symbol]
+            price = self.data.loc[date][symbol]
             val = price * num
             value += val
         return value
 
-    def run(self, plot=True, info=True, step_output=False):
+    def run(self, start_index, plot=True, info=True, step_output=False):
         """
 
+        :param start_index: Defines which data point (date) to start on, ie, 100 = start on 100th datapoint, this way
+        model has 100 data points as input
+        :type start_index: integer
         :param step_output: True, prints each step output and portfolio value, False, remains quiet
         :type step_output: bool
         :param info: True, prints summary of run including biggest loss, percentage gain, final value, final portfolio,
@@ -94,7 +103,7 @@ class Backtester:
             if plot:
                 time = []
 
-            for i in self.data:
+            for i in self.data.index[start_index:]:
                 if info:
                     prev_val = self.value
                 self.__model_step(i, step_output)
