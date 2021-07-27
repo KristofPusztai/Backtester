@@ -27,6 +27,10 @@ class Backtester:
         self.start_val = start_balance  # For use if roi info is wanted during run
 
         self.portfolio = start_portfolio
+        checksum = sum(self.portfolio.values())
+        if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
+                not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
+            raise ValueError('Invalid Input Portfolio, output sum: ' + str(checksum))
         self.data = data
         self.value = start_balance
         self.price_data = price_data
@@ -50,7 +54,7 @@ class Backtester:
         :return: nothing
         :rtype: None
         """
-        if sum(self.portfolio.values()) == 1:
+        if sum(self.portfolio.values()) == 1:  # If sum is 0, all cash no change in value!
             self.value = self.__calculate_value(date)
         data = self.data.loc[:date]
         out = self.model_fn(data, step_output)
@@ -59,6 +63,7 @@ class Backtester:
             if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
                     not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
                 raise ValueError('Invalid Model Portfolio output sum: ' + str(checksum))
+            # Sum of output portfolio percentages must be 1 or 0
             self.portfolio = out
             if step_output:
                 print("Value: " + str(self.value))
