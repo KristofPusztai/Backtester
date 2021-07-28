@@ -29,13 +29,15 @@ class Backtester:
         self.portfolio = start_portfolio
         checksum = sum(self.portfolio.values())
         # Invalid input check
-        if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
+        if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) and
                 not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
             raise ValueError('Invalid Input Portfolio, output sum: ' + str(checksum))
         self.data = data
         self.value = start_balance
         self.price_data = price_data
+
         self.model_fn = None
+        self.portfolio_num = None
 
     def set_model(self, model):
         """
@@ -55,17 +57,20 @@ class Backtester:
         :return: nothing
         :rtype: None
         """
-        if sum(self.portfolio.values()) == 1:  # If sum is 0, all cash no change in value!
+        # If sum is 0, all cash no  change in value
+        if math.isclose(sum(self.portfolio.values()), 1, rel_tol=0, abs_tol=0.009):
             self.value = self.__calculate_value(date)
+
         data = self.data.loc[:date]
         out = self.model_fn(data, step_output)
         if out:
             checksum = sum(out.values())
             # Invalid output check
-            if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) or
+            if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) and
                     not math.isclose(checksum, 1, rel_tol=0, abs_tol=0.009)):
                 raise ValueError('Invalid Model Portfolio output sum: ' + str(checksum))
             self.portfolio = out
+            self.portfolio_num = self.__calculate_portfolio_num(date)
             if step_output:
                 print("Value: " + str(self.value))
 
@@ -78,13 +83,22 @@ class Backtester:
         :rtype: float
         """
         value = 0
-        for symbol in self.portfolio:
-            position = self.portfolio[symbol]
-            num = position * self.value
+        for symbol in self.portfolio_num:
+            num = self.portfolio_num[symbol]
             price = self.data.loc[date][symbol]
             val = price * num
             value += val
         return value
+
+    def __calculate_portfolio_num(self, date):
+        p = {}
+        for symbol in self.portfolio:
+            position = self.portfolio[symbol]
+            val = position * self.value
+            price = self.data.loc[date][symbol]
+            num = val/price
+            p[symbol] = num
+        return p
 
     def run(self, start_index, plot=True, info=True, step_output=False):
         """
@@ -112,6 +126,8 @@ class Backtester:
             for i in self.data.index[start_index:]:
                 if info:
                     prev_val = self.value
+                if self.portfolio_num is None:
+                    self.portfolio_num = self.__calculate_portfolio_num(i)
                 self.__model_step(i, step_output)
                 history.append(self.value)
                 if plot:
