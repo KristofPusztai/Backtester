@@ -113,15 +113,13 @@ class Backtester:
         :type info: bool
         :param plot: True to plot, False to not plot
         :type plot: bool
-        :return: Returns history of portfolio value
+        :return: Returns datetime and history of portfolio value (for comparison plots of different models)
         :rtype: list
         """
         if self.model_fn:
             history = []
             if info:
                 biggest_loss = 0.0
-            if plot:
-                time = []
 
             for i in self.data.index[start_index:]:
                 if info:
@@ -130,23 +128,21 @@ class Backtester:
                     self.portfolio_num = self.__calculate_portfolio_num(i)
                 self.__model_step(i, step_output)
                 history.append(self.value)
-                if plot:
-                    time.append(i)
                 if info:
                     diff = self.value - prev_val
                     if diff < biggest_loss:
                         biggest_loss = diff
-
+            time = self.data.index[start_index:]
             if plot:
                 plt.plot(time, history)
                 plt.xlabel('Date')
                 plt.ylabel('Portfolio Value ($)')
             if info:
                 roi = 100.0 * (self.value - self.start_val) / self.start_val
-                print("ROI: " + str(roi) + "%")
-                print("Final Value: " + str(self.value))
+                print("ROI: " + str(round(roi, 3)) + "%")
+                print("Final Value: " + str(round(self.value, 2)))
                 print("Final Portfolio: " + str(self.portfolio))
-                print("Biggest Loss: " + str(biggest_loss))
-            return history
+                print("Biggest Loss: " + str(round(biggest_loss, 2)))
+            return time, history
         else:
             print("Model Function cannot be None, please set via set_model")
