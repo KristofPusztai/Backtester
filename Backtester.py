@@ -38,6 +38,7 @@ class Backtester:
 
         self.model_fn = None
         self.portfolio_num = None
+        self.trade_points = [[], []]
 
     def set_model(self, model):
         """
@@ -64,6 +65,9 @@ class Backtester:
         data = self.data.loc[:date]
         out = self.model_fn(data, step_output)
         if out:
+            # For plotting trade_points if plot=True
+            self.trade_points[0].append(date)
+            self.trade_points[1].append(self.value)
             checksum = sum(out.values())
             # Invalid output check
             if (not math.isclose(checksum, 0, rel_tol=0, abs_tol=0.009) and
@@ -96,7 +100,7 @@ class Backtester:
             position = self.portfolio[symbol]
             val = position * self.value
             price = self.data.loc[date][symbol]
-            num = val/price
+            num = val / price
             p[symbol] = num
         return p
 
@@ -139,6 +143,7 @@ class Backtester:
                 plt.plot(time, history, label=name)
                 plt.xlabel('Date')
                 plt.ylabel('Portfolio Value ($)')
+                plt.plot(self.trade_points[0], self.trade_points[1], "*")
                 if name:
                     plt.legend()
             if info:
