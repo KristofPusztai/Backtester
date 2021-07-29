@@ -100,9 +100,11 @@ class Backtester:
             p[symbol] = num
         return p
 
-    def run(self, start_index, plot=True, info=True, step_output=False):
+    def run(self, start_index, name=None, plot=True, info=True, step_output=False):
         """
 
+        :param name: for legend if plot=True
+        :type name: string
         :param start_index: Defines which data point (date) to start on, ie, 100 = start on 100th datapoint, this way
         model has 100 data points as input
         :type start_index: integer
@@ -134,9 +136,11 @@ class Backtester:
                         biggest_loss = diff
             time = self.data.index[start_index:]
             if plot:
-                plt.plot(time, history)
+                plt.plot(time, history, label=name)
                 plt.xlabel('Date')
                 plt.ylabel('Portfolio Value ($)')
+                if name:
+                    plt.legend()
             if info:
                 roi = 100.0 * (self.value - self.start_val) / self.start_val
                 print("ROI: " + str(round(roi, 3)) + "%")
