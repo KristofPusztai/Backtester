@@ -105,9 +105,11 @@ class Backtester:
             p[symbol] = num
         return p
 
-    def run(self, start_index, name=None, plot=True, info=True, step_output=False):
+    def run(self, start_index, name=None, plot=True, info=True, step_output=False, show_trade_points=True):
         """
 
+        :param show_trade_points: Plots points of trade if plot = True
+        :type show_trade_points: bool
         :param name: for legend if plot=True
         :type name: string
         :param start_index: Defines which data point (date) to start on, ie, 100 = start on 100th datapoint, this way
@@ -144,7 +146,8 @@ class Backtester:
                 plt.plot(time, history, label=name)
                 plt.xlabel('Date')
                 plt.ylabel('Portfolio Value ($)')
-                plt.plot(self.trade_points[0], self.trade_points[1], "*")
+                if show_trade_points:
+                    plt.plot(self.trade_points[0], self.trade_points[1], "*")
                 if name:
                     plt.legend()
             returns = []
