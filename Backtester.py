@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import math
 
 
@@ -119,7 +120,7 @@ class Backtester:
         :type info: bool
         :param plot: True to plot, False to not plot
         :type plot: bool
-        :return: Returns datetime and history of portfolio value (for comparison plots of different models)
+        :return: Returns datetime, history and returns of portfolio value (for comparison plots of different models)
         :rtype: list
         """
         if self.model_fn:
@@ -146,12 +147,16 @@ class Backtester:
                 plt.plot(self.trade_points[0], self.trade_points[1], "*")
                 if name:
                     plt.legend()
+            returns = []
+            for i in range(1, len(history)):
+                returns.append((history[i - 1] - history[i]) / history[i - 1])
             if info:
                 roi = 100.0 * (self.value - self.start_val) / self.start_val
                 print("ROI: " + str(round(roi, 3)) + "%")
                 print("Final Value: " + str(round(self.value, 2)))
+                print('Standard Deviation of Returns: ' + str(np.sqrt(np.var(returns))))
                 print("Final Portfolio: " + str(self.portfolio))
                 print("Biggest Loss: " + str(round(biggest_loss, 2)))
-            return time, history
+            return time, history, returns
         else:
             print("Model Function cannot be None, please set via set_model")
