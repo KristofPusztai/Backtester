@@ -1,6 +1,6 @@
 # Python Backtester "Engine" for strategy testing
 
-### Docs:
+### Usage:
 
     from Backtester import Backtester
     
@@ -13,4 +13,4 @@
     bt.set_model(model)
     
     # Runs strategy with given output parameters for plotting/info
-    bt.run(start_index, name=None, plot=True, info=True, step_output=False, show_trade_points=True)
+    time, history, returns = bt.run(start_index, name=None, plot=True, info=True, step_output=False, show_trade_points=True)
