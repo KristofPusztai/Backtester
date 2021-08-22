@@ -154,6 +154,10 @@ class Backtester:
             for i in range(1, len(history)):
                 returns.append((history[i - 1] - history[i]) / history[i - 1])
             if info:
+                if name:
+                    print('-' * 15)
+                    print(name)
+                print('-' * 15)
                 roi = 100.0 * (self.value - self.start_val) / self.start_val
                 print("ROI: " + str(round(roi, 3)) + "%")
                 print("Final Value: " + str(round(self.value, 2)))
@@ -163,3 +167,23 @@ class Backtester:
             return time, history, returns
         else:
             print("Model Function cannot be None, please set via set_model")
+
+    def benchmark(self, start_index, symbol, plot=True, info=True):
+        """
+
+        :param plot: True to plot, False to not plot
+        :type plot: bool
+        :param start_index: Defines which data point (date) to start on, ie, 100 = start on 100th datapoint, this way
+        model has 100 data points as input
+        :type start_index: integer
+        :param symbol: Benchmark symbol in data
+        :type symbol: str
+        :param info: True, prints summary of run including biggest loss, percentage gain, final value, final portfolio,
+        False, remains quiet and only returns end_balance
+        :type info: bool
+        :return: Returns datetime, history and returns of portfolio value (for comparison plots of different models)
+        :rtype: list
+        """
+        self.set_model(lambda data, step_output: None)
+        self.portfolio = {symbol: 1}
+        self.run(start_index, name='index' + symbol, plot=plot, info=info, show_trade_points=False)
